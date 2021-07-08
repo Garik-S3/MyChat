@@ -5,10 +5,11 @@
 <?import javafx.scene.text.*?>
 
 <VBox alignment="center" xmlns="http://javafx.com/javafx/8.0.202" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.geekbrains.june.chat.client.Controller">
-    <TextField fx:id="clientName" editable="false" visible="false" managed="false" />
+    <TextField fx:id="nicknameField" editable="false" visible="false" managed="false" />
     <HBox fx:id="authPanel">
-        <TextField promptText="Введите имя пользователя" fx:id="usernameField" HBox.hgrow="ALWAYS" onAction="#tryToAuth"/>
-        <Button onAction="#tryToAuth">Подключиться</Button>
+        <TextField promptText="Логин" fx:id="loginField" HBox.hgrow="ALWAYS"/>
+        <TextField promptText="Пароль" fx:id="passwordField" HBox.hgrow="ALWAYS"/>
+        <Button text="Aвторизоваться" onAction="#tryToAuth"/>
     </HBox>
     <HBox VBox.vgrow="ALWAYS">
         <TextArea fx:id="chatArea" editable="false" HBox.hgrow="ALWAYS"/>
