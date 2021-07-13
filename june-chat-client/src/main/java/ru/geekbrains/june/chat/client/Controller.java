@@ -17,7 +17,7 @@ public class Controller {
     TextArea chatArea;
 
     @FXML
-    TextField messageField, usernameField;
+    TextField messageField;
 
     @FXML
     HBox authPanel, msgPanel;
@@ -26,7 +26,7 @@ public class Controller {
     ListView<String> clientsListView;
 
     @FXML
-    TextField clientName;
+    TextField loginField, passwordField;
 
     private Socket socket;
     private DataInputStream in;
@@ -40,7 +40,7 @@ public class Controller {
             socket = new Socket("localhost", 8189);
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
-            new Thread(() -> logic()).start();
+            new Thread(() -> mainClientLogic()).start();
         } catch (IOException e) {
             showError("Невозможно подключиться к серверу");
         }
@@ -49,11 +49,11 @@ public class Controller {
     public void tryToAuth() {
         connect();
         try {
-            out.writeUTF("/auth " + usernameField.getText());
-            clientName.setText(usernameField.getText());
-            usernameField.clear();
+            out.writeUTF("/auth " + loginField.getText() + " " + passwordField.getText());
+            loginField.clear();
+            passwordField.clear();
         } catch (IOException e) {
-            showError("Невозможно отправить запрос авторизации на сервер");
+            showError("Не удаётся установить соединение с сервером");
         }
     }
 
@@ -64,11 +64,9 @@ public class Controller {
         authPanel.setManaged(!authorized);
         clientsListView.setVisible(authorized);
         clientsListView.setManaged(authorized);
-        clientName.setVisible(authorized);
-        clientName.setManaged(authorized);
     }
 
-    private void logic() {
+    public void mainClientLogic() {
         try {
             while (true) {
                 String inputMessage = in.readUTF();
