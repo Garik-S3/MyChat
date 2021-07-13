@@ -2,17 +2,18 @@ package ru.geeekbrains.june.chat.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Server {
+
     private List<ClientHandler> clients;
     private AuthService authService;
 
     public Server() {
         try {
-            authService = new DataBaseAuthService();
+            authService = new DatabaseAuthService();
             authService.start();
             this.clients = new ArrayList<>();
             ServerSocket serverSocket = new ServerSocket(8189);
@@ -81,5 +82,9 @@ public class Server {
             }
         }
         sender.sendMessage("Пользователь " + receiverUsername + " не в сети");
+    }
+
+    public AuthService getAuthService() {
+        return authService;
     }
 }

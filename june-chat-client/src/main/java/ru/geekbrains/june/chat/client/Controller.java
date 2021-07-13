@@ -26,7 +26,7 @@ public class Controller {
     ListView<String> clientsListView;
 
     @FXML
-    TextField loginField, passwordField, nicknameField;
+    TextField loginField, passwordField;
 
     private Socket socket;
     private DataInputStream in;
@@ -40,7 +40,7 @@ public class Controller {
             socket = new Socket("localhost", 8189);
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
-            new Thread(() -> logic()).start();
+            new Thread(() -> mainClientLogic()).start();
         } catch (IOException e) {
             showError("Невозможно подключиться к серверу");
         }
@@ -49,7 +49,7 @@ public class Controller {
     public void tryToAuth() {
         connect();
         try {
-            out.writeUTF("/auth " + loginField.getText() + " " +  passwordField.getText());
+            out.writeUTF("/auth " + loginField.getText() + " " + passwordField.getText());
             loginField.clear();
             passwordField.clear();
         } catch (IOException e) {
@@ -64,11 +64,9 @@ public class Controller {
         authPanel.setManaged(!authorized);
         clientsListView.setVisible(authorized);
         clientsListView.setManaged(authorized);
-        nicknameField.setVisible(authorized);
-        nicknameField.setManaged(authorized);
     }
 
-    private void logic() {
+    public void mainClientLogic() {
         try {
             while (true) {
                 String inputMessage = in.readUTF();

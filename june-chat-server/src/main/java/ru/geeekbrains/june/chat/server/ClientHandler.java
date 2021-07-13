@@ -12,17 +12,13 @@ public class ClientHandler {
     private DataInputStream in;
     private DataOutputStream out;
 
-    public String getNickname() {
-        return nickname;
-    }
-
     public ClientHandler(Server server, Socket socket) {
         try {
             this.server = server;
             this.socket = socket;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
-            new Thread(() -> logic()).start();
+            new Thread(() -> mainServerLogic()).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -36,10 +32,10 @@ public class ClientHandler {
         }
     }
 
-    private void logic() {
+    private void mainServerLogic() {
         try {
-            while (!sendAuthorizeMessage(in.readUTF())) ;
-            while (sendRegularMessage(in.readUTF())) ;
+            while (!consumeAuthorizeMessage(in.readUTF())) ;
+            while (consumeRegularMessage(in.readUTF())) ;
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -49,7 +45,7 @@ public class ClientHandler {
         }
     }
 
-    private boolean sendAuthorizeMessage(String message) {
+    private boolean consumeAuthorizeMessage(String message) {
         if (message.startsWith("/auth ")) {
             String[] tokens = message.split("\\s+");
             if (tokens.length < 3) {
@@ -59,10 +55,7 @@ public class ClientHandler {
                 sendMessage("SERVER : Имя пользователя или пароль не может состоять из нескольких слов");
                 return false;
             }
-            String selectedLogin = tokens[1];
-            String selectedPassword = tokens[2];
-            String nickname = DataBaseAuthService.getNickByLoginAndPass(selectedLogin,selectedPassword);
-
+            nickname = server.getAuthService().getNickByLoginAndPass(tokens[1], tokens[2]);
             if (nickname == null) {
                 System.out.println("SERVER : ERROR");
                 return false;
@@ -81,7 +74,7 @@ public class ClientHandler {
         }
     }
 
-    private boolean sendRegularMessage(String inputMessage) {
+    private boolean consumeRegularMessage(String inputMessage) {
         if (inputMessage.startsWith("/")) {
             if (inputMessage.equals("/exit")) {
                 sendMessage("/exit");
@@ -119,5 +112,9 @@ public class ClientHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getNickname() {
+        return nickname;
     }
 }
