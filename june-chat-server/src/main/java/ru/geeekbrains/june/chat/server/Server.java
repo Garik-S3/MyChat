@@ -5,11 +5,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
 
     private List<ClientHandler> clients;
     private AuthService authService;
+    ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
     public Server() {
         try {
@@ -21,11 +24,13 @@ public class Server {
             while (true) {
                 Socket socket = serverSocket.accept();
                 System.out.println("Подключился новый клиент");
-                new ClientHandler(this, socket);
+                cachedThreadPool.execute(() -> new ClientHandler(this, socket));
+                System.out.println("Подключился новый клиент");
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+            cachedThreadPool.shutdown();
             if (authService != null) {
                 authService.stop();
             }

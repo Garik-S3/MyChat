@@ -64,6 +64,7 @@ public class ClientHandler {
                 return false;
             } else {
                 sendMessage("/authok");
+                sendMessage("/nickname " + nickname);
                 sendMessage("Вы вошли в чат под именем: " + nickname);
                 server.subscribe(this);
                 return true;

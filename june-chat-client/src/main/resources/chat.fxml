@@ -5,6 +5,7 @@
 <?import javafx.scene.text.*?>
 
 <VBox alignment="center" xmlns="http://javafx.com/javafx/8.0.202" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.geekbrains.june.chat.client.Controller">
+    <TextField fx:id="title" editable="false" visible="false" managed="false" />
     <HBox fx:id="authPanel">
         <TextField promptText="Введите логин" fx:id="loginField" HBox.hgrow="ALWAYS"/>
         <TextField promptText="Введите пароль" fx:id="passwordField" HBox.hgrow="ALWAYS"/>

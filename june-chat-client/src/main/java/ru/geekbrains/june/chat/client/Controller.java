@@ -26,11 +26,12 @@ public class Controller {
     ListView<String> clientsListView;
 
     @FXML
-    TextField loginField, passwordField;
+    TextField loginField, passwordField, title;
 
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
+    private String nickname;
 
     public void connect() {
         if (socket != null && !socket.isClosed()) {
@@ -64,6 +65,8 @@ public class Controller {
         authPanel.setManaged(!authorized);
         clientsListView.setVisible(authorized);
         clientsListView.setManaged(authorized);
+        title.setVisible(authorized);
+        title.setManaged(authorized);
     }
 
     public void mainClientLogic() {
@@ -81,6 +84,14 @@ public class Controller {
             }
             while (true) {
                 String inputMessage = in.readUTF();
+                if (inputMessage.startsWith("/nickname ")){
+                    String[] tokens = inputMessage.split("\\s+");
+                    nickname = tokens[1];
+                    title.setText("Ваш аккаунт: " + nickname);
+                    for (String msg : ChatHistory.loadClientHistory(nickname,100)) {
+                        chatArea.appendText(msg + "\n");
+                    }
+                }
                 if (inputMessage.startsWith("/")) {
                     if (inputMessage.equals("/exit")) {
                         break;
@@ -97,6 +108,7 @@ public class Controller {
                     continue;
                 }
                 chatArea.appendText(inputMessage + "\n");
+                ChatHistory.saveClientHistory(nickname, inputMessage);
             }
         } catch (IOException e) {
             e.printStackTrace();
