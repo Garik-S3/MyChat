@@ -5,34 +5,47 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
+
     private List<ClientHandler> clients;
+    private AuthService authService;
+    ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
     public Server() {
         try {
+            authService = new DatabaseAuthService();
+            authService.start();
             this.clients = new ArrayList<>();
             ServerSocket serverSocket = new ServerSocket(8189);
             System.out.println("Сервер запущен. Ожидаем подключение клиентов..");
             while (true) {
                 Socket socket = serverSocket.accept();
                 System.out.println("Подключился новый клиент");
-                new ClientHandler(this, socket);
+                cachedThreadPool.execute(() -> new ClientHandler(this, socket));
+                System.out.println("Подключился новый клиент");
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            cachedThreadPool.shutdown();
+            if (authService != null) {
+                authService.stop();
+            }
         }
     }
 
     public synchronized void subscribe(ClientHandler c) {
-        broadcastMessage("В чат зашел пользователь " + c.getUsername());
+        broadcastMessage("В чат зашел пользователь " + c.getNickname());
         clients.add(c);
         broadcastClientList();
     }
 
     public synchronized void unsubscribe(ClientHandler c) {
         clients.remove(c);
-        broadcastMessage("Из чата вышел пользователь " + c.getUsername());
+        broadcastMessage("Из чата вышел пользователь " + c.getNickname());
         broadcastClientList();
     }
 
@@ -46,15 +59,15 @@ public class Server {
         StringBuilder builder = new StringBuilder(clients.size() * 10);
         builder.append("/clients_list ");
         for (ClientHandler c : clients) {
-            builder.append(c.getUsername()).append(" ");
+            builder.append(c.getNickname()).append(" ");
         }
         String clientsListStr = builder.toString();
         broadcastMessage(clientsListStr);
     }
 
-    public synchronized boolean isUsernameUsed(String username) {
+    public synchronized boolean isNicknameUsed(String nickname) {
         for (ClientHandler c : clients) {
-            if (c.getUsername().equalsIgnoreCase(username)) {
+            if (c.getNickname().equalsIgnoreCase(nickname)) {
                 return true;
             }
         }
@@ -62,17 +75,21 @@ public class Server {
     }
 
     public synchronized void sendPersonalMessage(ClientHandler sender, String receiverUsername, String message) {
-        if (sender.getUsername().equalsIgnoreCase(receiverUsername)) {
+        if (sender.getNickname().equalsIgnoreCase(receiverUsername)) {
             sender.sendMessage("Нельзя отправлять личные сообщения самому себе");
             return;
         }
         for (ClientHandler c : clients) {
-            if (c.getUsername().equalsIgnoreCase(receiverUsername)) {
-                c.sendMessage("от " + sender.getUsername() + ": " + message);
+            if (c.getNickname().equalsIgnoreCase(receiverUsername)) {
+                c.sendMessage("от " + sender.getNickname() + ": " + message);
                 sender.sendMessage("пользователю " + receiverUsername + ": " + message);
                 return;
             }
         }
         sender.sendMessage("Пользователь " + receiverUsername + " не в сети");
+    }
+
+    public AuthService getAuthService() {
+        return authService;
     }
 }
